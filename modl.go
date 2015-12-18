@@ -71,7 +71,11 @@ type bindPlan struct {
 func (plan bindPlan) createBindInstance(elem reflect.Value) bindInstance {
 	bi := bindInstance{query: plan.query, autoIncrIdx: plan.autoIncrIdx, versField: plan.versField}
 	if plan.versField != "" {
-		bi.existingVersion = elem.FieldByName(plan.versField).Int()
+		versionField := elem.FieldByName(plan.versField)
+		if versionField.Kind() != reflect.Int {
+			panic("'Version' is a reserved fieldname on structs used with modl. Please rename your field")
+		}
+		bi.existingVersion = versionField.Int()
 	}
 
 	for i := 0; i < len(plan.argFields); i++ {
@@ -126,8 +130,8 @@ type SqlExecutor interface {
 // Compile-time check that DbMap and Transaction implement the SqlExecutor
 // interface.
 var (
-        _ SqlExecutor = &DbMap{}
-        _ SqlExecutor = &Transaction{}
+	_ SqlExecutor = &DbMap{}
+	_ SqlExecutor = &Transaction{}
 )
 
 ///////////////
